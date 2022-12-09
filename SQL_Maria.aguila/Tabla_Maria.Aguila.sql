@@ -13,7 +13,7 @@ CREATE TABLE practica_dll.fleet (
 CREATE TABLE practica_dll.poliza (
 	idpoliza SERIAL PRIMARY KEY,
 	insuranceCompany VARCHAR(255),
-	price INT NULL,
+	price INT NOT NULL,
 	currency VARCHAR(10) NOT NULL
 );
 
@@ -26,7 +26,7 @@ CREATE TABLE practica_dll.car (
 	color varchar(50) NOT NULL,
 	nkilometers integer NOT NULL,
 	npolicy integer NOT NULL,
-	acquisition date NULL DEFAULT '2022-12-10'::date,
+	acquisition date NOT NULL DEFAULT '2022-12-10'::date,
 	country varchar(100) NULL DEFAULT 'SPAIN'::character varying
 );
 
