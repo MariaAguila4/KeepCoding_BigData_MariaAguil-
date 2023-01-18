@@ -1,0 +1,212 @@
+---
+title: "practica_final"
+format: html
+editor: visual
+---
+
+Vamos a utilizar el dataset de semillas que se encuentra aquí: https://archive.ics.uci.edu/ml/datasets/seeds#
+
+Primero vamos a descargarnos el dataset con el siguiente comando:
+
+```{r}
+library(tidyverse)
+df_seeds <- read.table('https://archive.ics.uci.edu/ml/machine-learning-databases/00236/seeds_dataset.txt', col.names =c('area','perimetro','compacto','longitud','anchura','coeficient.asimetria','longitud.ranura','tipo'))
+```
+
+#### PREGUNTA 1
+
+¿Cuantas filas y cuantas columnas tiene el dataframe df_seeds?
+
+**Respuesta**:
+
+```{r}
+df_seeds
+dim(df_seeds)
+```
+
+#### PREGUNTA 2
+
+Vamos a convertir en factor la columna tipo. Vamos a reemplazar los números por su correspondiente etiqueta (label). La correspondencia entre el código y el tipo es:
+
+-   1 - Kama
+-   2 - Rosa
+-   3 - Canadian
+
+Convierte en factor la columna seeds, respetando las etiquetas:
+
+**Respuesta**:
+
+```{r}
+df_seeds$tipo <- ifelse(df_seeds$tipo == 1, "Kama",
+                   ifelse(df_seeds$tipo == 2, "Rosa",
+                          ifelse(df_seeds$tipo == 3,"Canadian", df_seeds$tipo)))
+df_seeds
+```
+
+#### PREGUNTA 3
+
+¿Cual es la media del area de cada uno de los tipos?
+
+**Respuesta**
+
+```{r}
+df_seeds |> group_by(tipo) |> summarize(area_medio=mean(area))
+```
+
+```{r}
+aggregate(df_seeds$area ~ df_seeds$tipo, data = df_seeds, mean)
+```
+
+#### PREGUNTA 4
+
+¿Como se llama el siguiente tipo de gráfico?. ¿Qué representa la línea del centro de la caja?
+
+```{r}
+ggplot(df_seeds, aes(x=tipo, y=area)) + geom_boxplot()
+```
+
+**Respuesta**:
+
+El código crea un **gráfico de caja**, también conocido como "**box plot**" en inglés.
+
+Este tipo de gráfico es utilizado para mostrar la **distribución de un conjunto** de datos mediante la representación de los **cuartiles y la varianza**.
+
+Cada caja representa el rango entre el primer y tercer cuartil, mientras que la línea central representa la mediana o el segundo cuartil.
+
+Los **bigotes** indican los valores más extremos del conjunto de datos que están dentro de 1.5 veces la desviación estándar de los cuartiles.
+
+En el gráfico generado, se utiliza la función ggplot() para especificar el dataframe y las variables a utilizar y la función geom_boxplot() para crear el gráfico. La línea central de la caja representa la mediana de los valores de la variable "area" agrupados por el tipo.
+
+#### PREGUNTA 5
+
+¿Como pintarías un diagrama de puntos (o scatterplot) con ggplot con las siguientes características? - En el eje X la variable compacto - En el eje Y la variable area - Cada tipo de semilla debería tener un color diferente
+
+**Respuesta**:
+
+```{r}
+ggplot(data = df_seeds, aes(x = compacto, y = area, color = tipo)) + geom_point()
+```
+
+#### PREGUNTA 6
+
+¿Qué hace la siguiente línea?:
+
+```{r}
+df_seeds |> mutate(is_kama = tipo==1) -> df_seeds
+df_seeds
+
+```
+
+**Respuesta**: '
+
+La línea de código utiliza el operador de tubería "**`|>`**" y la función **`mutate()`** de la librería **`dplyr`** para crear una nueva columna en el dataframe "df_seeds".
+
+La función **`mutate()`** permite agregar una o más columnas a un dataframe existente, y se utiliza para modificar los datos existentes. En este caso, se está utilizando para crear una nueva columna llamada "is_kama" en el dataframe "df_seeds".
+
+La nueva columna "is_kama" tendrá el valor "TRUE" si el valor de la columna "tipo" es igual a "Kama" y "FALSE" en caso contrario. Se establece una comparación entre la columna "tipo" y el valor "Kama" y se asigna el resultado a la nueva columna "is_kama".
+
+La expresión **`df_seeds -> df_seeds`** es una manera de asignar el resultado de mutate a la misma variable, en este caso df_seeds, de manera que se sobrescribe el dataframe con la nueva columna.
+
+#### PREGUNTA 7
+
+Vamos a dividir el conjunto de datos en test y training porque vamos a entrenar un modelo que me permita diferenciar si una semilla es de tipo Kama o no. ¿Por qué es aconsejable dividir el dataset en los grupos de train y test?
+
+```{r}
+set.seed(123) # Este set.seed hace que a todos nos generen los mismos número aleatorios
+idx <- sample(1:nrow(df_seeds), 0.7*nrow(df_seeds))
+df_seeds_train <- df_seeds[idx,]
+df_seeds_test <- df_seeds[-idx,]
+```
+
+**Respuesta**:
+
+Dividir el conjunto de datos en dos grupos, uno de entrenamiento (training) y otro de prueba (test), es una práctica común en el desarrollo de modelos de aprendizaje automático.
+
+La razón principal por la cual es aconsejable dividir el conjunto de datos en estos dos grupos es para poder evaluar de manera objetiva el rendimiento del modelo en datos que no se utilizaron durante su entrenamiento. Si se utilizara el mismo conjunto de datos para entrenar y evaluar el modelo, es probable que el modelo se sobreajuste a esos datos y no generalice bien a nuevos datos.
+
+Al tener un conjunto de datos de prueba independiente, se puede evaluar el rendimiento del modelo en datos desconocidos y obtener una medida más precisa de su capacidad de generalización.
+
+En este caso, el modelo que se va a entrenar es para diferenciar si una semilla es de tipo Kama o no, entonces al utilizar un conjunto de datos independiente para evaluar el modelo, se puede evaluar su capacidad para predecir si una semilla es de tipo Kama en un conjunto de datos desconocido y no solo en los datos utilizados para entrenar el modelo.
+
+#### PREGUNTA 8
+
+Vamos a crear un modelo para realizar una clasificación binaria, donde le pasaremos como entrada las columnas: area, perimetro, compacto, longitud, coeficient.asimetria y longitud.ranura
+
+¿Qué tipo de algoritmo o modelo debería usar?
+
+**Respuesta**: ''
+
+#### PREGUNTA 9
+
+Crea un modelo que me permita clasificar si una semilla es de tipo Kama o no con las siguientes columnas: area, perimetro, compacto, longitud, coeficient.asimetria, longitud.ranura
+
+**Respuesta**:
+
+```{r}
+
+# Cargar las librerías necesarias
+library(caret)
+
+# Cargar los datos
+data(df_seeds)
+
+# Asignar las columnas de los datos a las variables de entrada y salida
+x <- df_seeds[, c('area', 'perimetro', 'compacto', 'longitud', 'coeficient.asimetria', 'longitud.ranura')]
+y_bool <- df_seeds[,9]
+y <- ifelse(y_bool, 1, 0)
+
+# Dividir los datos en conjuntos de entrenamiento y prueba
+trainIndex <- createDataPartition(y, p = .8, list = FALSE)
+trainingData <- x[trainIndex,]
+trainingLabels <- y[trainIndex]
+testData <- x[-trainIndex,]
+testLabels <- y[-trainIndex]
+
+
+# Entrenar el modelo
+modelo <- train(trainingData, trainingLabels, method = "glm")
+
+# Hacer predicciones en los datos de prueba
+predictions <- predict(modelo, testData)
+
+
+cf <- caret::confusionMatrix(data=factor(predict(modelo, testData)>0, labels= c('TRUE','FALSE') ), reference= ifelse(df_seeds$is_kama, 1, 0) )
+# Evaluar el rendimiento del modelo
+#confusionMatrix(predictions, testLabels)
+```
+
+#### PREGUNTA 10
+
+Si usamos un umbral de 0 en la salida del modelo (lo que equivale a probabilidad de 0.5 cuando usamos el predict con type='response') ¿Cuales son los valores de precisión y exhausitividad?
+
+**Respuesta**.
+
+```{r}
+```
+
+#### PREGUNTA 11
+
+¿Qué están haciendo las siguientes líneas?
+
+```{r}
+set.seed(123)
+cl<-df_seeds |> select(area,perimetro,compacto,longitud,anchura,coeficient.asimetria,longitud.ranura) |> kmeans(3)
+table(real=df_seeds$tipo,cluster=cl$cluster)
+```
+
+**Respuesta**:
+
+La primera línea, "set.seed(123)", establece la semilla del generador de números aleatorios en R en el valor 123. Esto garantiza que los resultados del algoritmo k-means (que utiliza números aleatorios) sean reproducibles.
+
+La segunda línea, "cl\<-df_seeds \|\> select(area,perimetro,compacto,longitud,anchura,coeficient.asimetria,longitud.ranura) \|\> kmeans(3)", está realizando varias tareas:
+
+1.  Utiliza la sintaxis de "pipe" ( \|\> ) para seleccionar solo las columnas "area", "perimetro", "compacto", "longitud", "anchura", "coeficient.asimetria" y "longitud.ranura" del conjunto de datos df_seeds.
+
+2.  Luego, aplica el algoritmo k-means para agrupar los datos seleccionados en 3 clusters (k = 3) y asigna el resultado a la variable "cl". El algoritmo k-means busca dividir los datos en k grupos de puntos de datos similares.
+
+    La tercera línea, "table(real=df_seeds\$tipo,cluster=cl\$cluster)", crea una tabla de contingencia que relaciona las etiquetas reales de cada punto de datos (en la columna "real") con el cluster al que fue asignado cada punto de datos (en la columna "cluster"). Esto permite evaluar cómo bien el algoritmo k-means ha dividido los datos en los clusters deseados.
+
+
+    \
+
+
