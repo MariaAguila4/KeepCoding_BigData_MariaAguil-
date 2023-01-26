@@ -22,6 +22,7 @@ df_seeds <- read.table('https://archive.ics.uci.edu/ml/machine-learning-database
 ```{r}
 df_seeds
 dim(df_seeds)
+paste0("Columnas: ",ncol(df_seeds), " y  Filas: ",nrow(df_seeds))
 ```
 
 #### PREGUNTA 2
@@ -92,7 +93,7 @@ ggplot(data = df_seeds, aes(x = compacto, y = area, color = tipo)) + geom_point(
 ¿Qué hace la siguiente línea?:
 
 ```{r}
-df_seeds |> mutate(is_kama = tipo==1) -> df_seeds
+df_seeds |> mutate(is_kama = tipo=="Kama") -> df_seeds
 df_seeds
 
 ```
@@ -136,6 +137,16 @@ Vamos a crear un modelo para realizar una clasificación binaria, donde le pasar
 
 **Respuesta**: ''
 
+Se podría utilizar un algoritmo de clasificación supervisada para resolver el problema.
+
+Un ejemplo sería una regresión logística, ya que es un algoritmo simple y eficiente para clasificar entre dos opciones (en este caso, si una semilla es de tipo Kama o no).
+
+Otro algoritmo que podría considerar es un árbol de decisión, ya que es fácil de entender y visualizar, y puede manejar tanto variables categóricas como numéricas.
+
+Otra opción podría ser un clasificador bayesiano, ya que es simple y eficiente para clasificar problemas con un pequeño conjunto de datos.
+
+En base a mi experiencia y conocimiento, he decidido utilizar una regresión logística para este problema de clasificación binaria debido a que es un método robusto y ampliamente utilizado en este tipo de tareas.
+
 #### PREGUNTA 9
 
 Crea un modelo que me permita clasificar si una semilla es de tipo Kama o no con las siguientes columnas: area, perimetro, compacto, longitud, coeficient.asimetria, longitud.ranura
@@ -144,35 +155,18 @@ Crea un modelo que me permita clasificar si una semilla es de tipo Kama o no con
 
 ```{r}
 
-# Cargar las librerías necesarias
-library(caret)
+# Fit a logistic regression model using the training data
+model <- glm(is_kama ~ area + perimetro + compacto + longitud + coeficient.asimetria + longitud.ranura, data = df_seeds_train, family = binomial(link = 'logit'))
 
-# Cargar los datos
-data(df_seeds)
+# Print a summary of the model
+summary(model)
 
-# Asignar las columnas de los datos a las variables de entrada y salida
-x <- df_seeds[, c('area', 'perimetro', 'compacto', 'longitud', 'coeficient.asimetria', 'longitud.ranura')]
-y_bool <- df_seeds[,9]
-y <- ifelse(y_bool, 1, 0)
+# Use the model to predict on the test data
+pred <- predict(model, df_seeds_test, type = "response")
 
-# Dividir los datos en conjuntos de entrenamiento y prueba
-trainIndex <- createDataPartition(y, p = .8, list = FALSE)
-trainingData <- x[trainIndex,]
-trainingLabels <- y[trainIndex]
-testData <- x[-trainIndex,]
-testLabels <- y[-trainIndex]
+# Print the predictions
+pred
 
-
-# Entrenar el modelo
-modelo <- train(trainingData, trainingLabels, method = "glm")
-
-# Hacer predicciones en los datos de prueba
-predictions <- predict(modelo, testData)
-
-
-cf <- caret::confusionMatrix(data=factor(predict(modelo, testData)>0, labels= c('TRUE','FALSE') ), reference= ifelse(df_seeds$is_kama, 1, 0) )
-# Evaluar el rendimiento del modelo
-#confusionMatrix(predictions, testLabels)
 ```
 
 #### PREGUNTA 10
@@ -182,6 +176,28 @@ Si usamos un umbral de 0 en la salida del modelo (lo que equivale a probabilidad
 **Respuesta**.
 
 ```{r}
+# Set the threshold for classification
+threshold <- 0
+
+# Use the model to predict the test data
+pred_test <- predict(model_seed, df_seeds_test)
+
+# Create a confusion matrix
+confusion_matrix <- table(real = df_seeds_test$is_kama, pred = pred_test > threshold)
+paste("confusion_matrix: ")
+confusion_matrix
+
+
+# Calculate precision
+precision <- confusion_matrix[2,2] / (confusion_matrix[1,2] + confusion_matrix[2,2])
+
+# Calculate recall
+recall <- confusion_matrix[2,2] / (confusion_matrix[2,1] + confusion_matrix[2,2])
+
+# Print the results
+paste("Precision:", precision)
+paste("Recall:", recall)
+
 ```
 
 #### PREGUNTA 11
@@ -206,7 +222,4 @@ La segunda línea, "cl\<-df_seeds \|\> select(area,perimetro,compacto,longitud,a
 
     La tercera línea, "table(real=df_seeds\$tipo,cluster=cl\$cluster)", crea una tabla de contingencia que relaciona las etiquetas reales de cada punto de datos (en la columna "real") con el cluster al que fue asignado cada punto de datos (en la columna "cluster"). Esto permite evaluar cómo bien el algoritmo k-means ha dividido los datos en los clusters deseados.
 
-
     \
-
-
